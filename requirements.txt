@@ -12,6 +12,5 @@ joblib
 types-PyYAML
 Flask
 Flask-Cors
-keras
 tensorflow
 -e .

@@ -2,15 +2,17 @@ import joblib
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import tensorflow
+from tensorflow.keras.models import load_model
 
 
 
 class PredictionPipeline:
     def __init__(self):
-        self.model = joblib.load(Path('artifacts/model_trainer/model.joblib'))
+        self.model = load_model(Path('artifacts/model_trainer/model.h5'))
 
     
     def predict(self, data):
         prediction = self.model.predict(data)
 
-        return prediction
+        return np.argmax(prediction, axis=1)

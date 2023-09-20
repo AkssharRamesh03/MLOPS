@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import os 
 import numpy as np
 import pandas as pd
@@ -18,38 +18,47 @@ def training():
     return "Training Successful!" 
 
 
-@app.route('/predict',methods=['POST','GET']) # route to show the predictions in a web UI
-def index():
-    if request.method == 'POST':
-        try:
-            #  reading the inputs given by the user
-            fixed_acidity =float(request.form['fixed_acidity'])
-            volatile_acidity =float(request.form['volatile_acidity'])
-            citric_acid =float(request.form['citric_acid'])
-            residual_sugar =float(request.form['residual_sugar'])
-            chlorides =float(request.form['chlorides'])
-            free_sulfur_dioxide =float(request.form['free_sulfur_dioxide'])
-            total_sulfur_dioxide =float(request.form['total_sulfur_dioxide'])
-            density =float(request.form['density'])
-            pH =float(request.form['pH'])
-            sulphates =float(request.form['sulphates'])
-            alcohol =float(request.form['alcohol'])
-       
-         
-            data = [fixed_acidity,volatile_acidity,citric_acid,residual_sugar,chlorides,free_sulfur_dioxide,total_sulfur_dioxide,density,pH,sulphates,alcohol]
-            data = np.array(data).reshape(1, 11)
-            
-            obj = PredictionPipeline()
-            predict = obj.predict(data)
+@app.route('/predict', methods=['POST'])
+def predict():
 
-            return render_template('results.html', prediction = str(predict))
+    try:
+        # Get JSON data from the request
+        data = request.json
 
-        except Exception as e:
-            print('The Exception message is: ',e)
-            return 'something is wrong'
+        # Extract the features from the JSON data
+        SALEQTY = int(data['SALEQTY'])
+        SHOPCODE = int(data['SHOPCODE'])
+        SUPPLIERCODE = int(data['SUPPLIERCODE'])
+        CAT1CODE = int(data['CAT1CODE'])
+        CAT3CODE = int(data['CAT3CODE'])
+        PROFCODE = int(data['PROFCODE'])
+        GROUPPROFCODE = int(data['GROUPPROFCODE'])
 
-    else:
-        return render_template('index.html')
+        # Create a NumPy array from the extracted features
+        input_data = np.array([[
+            SALEQTY, SHOPCODE, SUPPLIERCODE, CAT1CODE,
+            CAT3CODE, PROFCODE, GROUPPROFCODE
+        ]])
+
+        obj = PredictionPipeline()
+        prediction = np.array(obj.predict(input_data))
+        print(prediction)
+
+        # You can return predictions as JSON or perform further processing
+
+        # Return a JSON response (example)
+        response_data = {
+            'message': 'Predictions successful',
+            'predictions': prediction.tolist()  # Replace with your actual predictions
+        }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+            # Handle exceptions or errors
+            error_message = str(e)
+            response_data = {'message': 'Error: ' + error_message}
+            return jsonify(response_data), 400
 
 
 if __name__ == "__main__":
